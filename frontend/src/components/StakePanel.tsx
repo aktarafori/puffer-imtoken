@@ -6,6 +6,7 @@ import {
   PufferClient,
   Chain,
 } from '@pufferfinance/puffer-sdk';
+import tcx from '@imtoken/tcx-wasm';   // Token Core 引入
 
 const tokens = [
   { value: 'ETH', label: 'ETH' },
@@ -23,6 +24,20 @@ export default function StakePanel() {
   const [txHash, setTxHash] = useState('');
   const [pufETHBalance, setPufETHBalance] = useState('0.0000');
   const [rate, setRate] = useState('1.0000');
+
+  // Token Core 初始化（满足 imToken 官方要求）
+  useEffect(() => {
+    const initTokenCore = async () => {
+      try {
+        await tcx.init();
+        console.log('✅ Token Core 初始化成功');
+      } catch (err) {
+        console.log('Token Core 初始化:', err);
+      }
+    };
+
+    initTokenCore();
+  }, []);
 
   const fetchRate = async () => {
     try {
@@ -53,25 +68,21 @@ export default function StakePanel() {
     }
   };
 
-   // Token Core 初始化（满足 imToken 官方要求）
-  useEffect(() => {
-    const initTokenCore = async () => {
-      try {
-        await tcx.init();
-        console.log('✅ Token Core 初始化成功');
-      } catch (err) {
-        console.log('Token Core 初始化:', err);
-      }
-    };
-
-    initTokenCore();
-  }, []);
-
-  // 原有的 fetchRate 和 fetchBalance 的 useEffect
+  // 获取汇率和余额
   useEffect(() => {
     fetchRate();
     if (isConnected && address) fetchBalance();
   }, [isConnected, address]);
+
+  const handleStake = async () => {
+    if (!isConnected || !walletClient || !address) {
+      alert('请用 imToken 连接钱包');
+      return;
+    }
+    if (!amount || Number(amount) <= 0) {
+      alert('请输入大于0的数量');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -93,7 +104,7 @@ export default function StakePanel() {
       }
 
       setTxHash(tx);
-      alert(`✅ 交易发送成功！\n\nTx: ${tx}`);
+      alert(`✅ 交易发送成功！\n\nTx Hash: ${tx}\n\n请在钱包或 Etherscan 查看`);
       setAmount('');
       setTimeout(fetchBalance, 8000);
     } catch (error: any) {
@@ -116,14 +127,14 @@ export default function StakePanel() {
             <div className="text-3xl font-bold text-[#007AFF]">{pufETHBalance}</div>
           </div>
           <div className="text-right">
-            <div className="text-sm text-gray-500">汇率</div>
-            <div>1 ETH ≈ {rate} pufETH</div>
+            <div className="text-sm text-gray-500">当前汇率</div>
+            <div className="font-medium">1 ETH ≈ {rate} pufETH</div>
           </div>
         </div>
       </div>
 
       <div className="mb-5">
-        <div className="text-sm text-gray-500 mb-2">选择资产</div>
+        <div className="text-sm text-gray-500 mb-2">选择质押资产</div>
         <div className="flex gap-2">
           {tokens.map(t => (
             <button
@@ -146,7 +157,7 @@ export default function StakePanel() {
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
         placeholder={`输入 ${selectedToken} 数量`}
-        className="w-full px-5 py-5 text-xl border rounded-3xl focus:border-[#007AFF] mb-6"
+        className="w-full px-5 py-5 text-xl border border-gray-200 rounded-3xl focus:border-[#007AFF] mb-6"
         disabled={loading}
       />
 
@@ -158,7 +169,15 @@ export default function StakePanel() {
         {loading ? '发送交易中...' : `质押 ${selectedToken} → pufETH`}
       </button>
 
-      {txHash && <p className="mt-4 text-center text-sm break-all text-green-600">Tx: {txHash}</p>}
+      {txHash && (
+        <p className="mt-4 text-center text-sm break-all text-green-600">
+          ✅ Tx: {txHash}
+        </p>
+      )}
+
+      <p className="text-center text-xs text-gray-400 mt-6">
+        已集成 Token Core • 支持 imToken 主网
+      </p>
     </div>
   );
 }
