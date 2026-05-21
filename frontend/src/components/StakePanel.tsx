@@ -53,20 +53,25 @@ export default function StakePanel() {
     }
   };
 
+   // Token Core 初始化（满足 imToken 官方要求）
+  useEffect(() => {
+    const initTokenCore = async () => {
+      try {
+        await tcx.init();
+        console.log('✅ Token Core 初始化成功');
+      } catch (err) {
+        console.log('Token Core 初始化:', err);
+      }
+    };
+
+    initTokenCore();
+  }, []);
+
+  // 原有的 fetchRate 和 fetchBalance 的 useEffect
   useEffect(() => {
     fetchRate();
     if (isConnected && address) fetchBalance();
   }, [isConnected, address]);
-
-  const handleStake = async () => {
-    if (!isConnected || !walletClient || !address) {
-      alert('请用 imToken 连接钱包');
-      return;
-    }
-    if (!amount || Number(amount) <= 0) {
-      alert('请输入大于0的数量');
-      return;
-    }
 
     setLoading(true);
     try {
