@@ -116,4 +116,63 @@ export default function StakePanel() {
       <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6">
         <div className="flex justify-between items-center">
           <div>
-            <div
+            <div className="text-sm text-gray-500">你的 pufETH 余额</div>
+            <div className="text-3xl font-bold text-[#007AFF]">{pufETHBalance} pufETH</div>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-gray-500">当前汇率</div>
+            <div className="font-medium">1 ETH ≈ {rate} pufETH</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Token 选择 */}
+      <div className="mb-4">
+        <label className="block text-sm text-gray-500 mb-2">选择质押资产</label>
+        <div className="flex gap-2">
+          {tokens.map(token => (
+            <button
+              key={token.value}
+              onClick={() => setSelectedToken(token.value)}
+              className={`flex-1 py-3 rounded-2xl text-sm font-medium transition-all ${
+                selectedToken === token.value
+                  ? 'bg-[#007AFF] text-white shadow'
+                  : 'bg-gray-100 hover:bg-gray-200'
+              }`}
+            >
+              {token.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 输入金额 */}
+      <input
+        type="number"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+        placeholder={`输入 ${selectedToken} 数量`}
+        className="w-full px-5 py-5 text-xl border border-gray-200 rounded-3xl focus:outline-none focus:border-[#007AFF] mb-6"
+        disabled={loading}
+      />
+
+      <button
+        onClick={handleStake}
+        disabled={loading || !amount || !isConnected}
+        className="w-full py-5 bg-[#007AFF] hover:bg-blue-600 text-white rounded-3xl text-xl font-medium disabled:opacity-50 transition-all"
+      >
+        {loading ? '交易处理中...' : `一键质押 ${selectedToken} → pufETH`}
+      </button>
+
+      {txHash && (
+        <p className="mt-4 text-center text-sm text-green-600 break-all">
+          ✅ Tx: {txHash}
+        </p>
+      )}
+
+      <p className="text-center text-xs text-gray-400 mt-6">
+        imToken 主网 • 小额测试 • 确认钱包在以太坊主网
+      </p>
+    </div>
+  );
+}
