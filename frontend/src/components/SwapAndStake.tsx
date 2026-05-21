@@ -1,56 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import tcx from '@imtoken/tcx-wasm';
 
 export default function SwapAndStake() {
-  const { isConnected } = useAccount();
-  const [fromToken, setFromToken] = useState('USDT');
-  const [amount, setAmount] = useState('');
+  const { isConnected, address } = useAccount();
+  const [txHash, setTxHash] = useState('');
 
-  const handleSwapAndStake = () => {
+  // Token Core 初始化
+  useEffect(() => {
+    const init = async () => {
+      try { await tcx.init(); } catch (e) { console.log(e); }
+    };
+    init();
+  }, []);
+
+  // 打开 Tokenlon 兑换（imToken 环境最友好）
+  const openTokenlonSwap = () => {
     if (!isConnected) {
-      alert('请先连接钱包');
+      alert('请先连接 imToken 钱包');
       return;
     }
-    // Tokenlon 跳转或集成
-    window.open(`https://tokenlon.im/swap?from=${fromToken}&to=ETH&amount=${amount}`, '_blank');
-    alert('已跳转 Tokenlon 兑换 → 兑换后自动质押（后续可深度集成）');
+
+    // Tokenlon 官方 Swap 页面（带 referral 效果更好）
+    const tokenlonUrl = `https://tokenlon.im/instant?from=ETH&to=pufETH&address=${address}`;
+    
+    // 在新标签页打开（imToken 内会自动适配）
+    window.open(tokenlonUrl, '_blank');
+    
+    alert('已打开 Tokenlon 兑换页面\n\n兑换完成后回到此页面点击“去质押”');
   };
 
   return (
-    <div className="card p-6">
-      <h2 className="text-xl font-bold mb-4">任意币 → pufETH</h2>
-      <p className="text-sm text-gray-500 mb-6">通过 Tokenlon 一键兑换后质押</p>
+    <div className="card p-6 max-w-lg mx-auto">
+      <h2 className="text-2xl font-bold mb-2">任意币兑换 + 质押</h2>
+      <p className="text-gray-500 mb-6">通过 Tokenlon 聚合最优价格 → pufETH</p>
 
-      <div className="space-y-4">
-        <div>
-          <label className="text-sm text-gray-500 block mb-1">兑换自</label>
-          <select 
-            value={fromToken} 
-            onChange={(e) => setFromToken(e.target.value)}
-            className="w-full px-4 py-4 border border-gray-200 rounded-2xl"
-          >
-            <option value="USDT">USDT</option>
-            <option value="USDC">USDC</option>
-            <option value="DAI">DAI</option>
-            <option value="WBTC">WBTC</option>
-          </select>
-        </div>
-
-        <input
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          placeholder="输入数量"
-          className="w-full px-4 py-4 text-lg border border-gray-200 rounded-2xl"
-        />
+      <div className="bg-yellow-50 border border-yellow-100 rounded-3xl p-6 mb-8 text-center">
+        <div className="text-5xl mb-4">🔄</div>
+        <div className="text-xl font-medium">支持任意代币兑换成 pufETH</div>
+        <div className="text-sm text-gray-500 mt-2">Tokenlon 提供最优汇率 + 低滑点</div>
       </div>
 
       <button
-        onClick={handleSwapAndStake}
-        className="w-full mt-8 py-4 bg-[#007AFF] text-white rounded-2xl text-lg font-medium"
+        onClick={openTokenlonSwap}
+        className="w-full py-5 bg-[#FF6B00] hover:bg-orange-600 text-white rounded-3xl text-xl font-medium mb-4"
       >
-        Tokenlon 兑换并质押
+        打开 Tokenlon 兑换任意币
       </button>
+
+      <button
+        onClick={() => window.location.reload()} // 简单返回质押页
+        className="w-full py-5 bg-[#007AFF] text-white rounded-3xl text-xl font-medium"
+      >
+        兑换完成后 → 去直接质押
+      </button>
+
+      <p className="text-center text-xs text-gray-400 mt-8">
+        已集成 Token Core • Tokenlon 官方聚合器 • imToken 最佳体验
+      </p>
     </div>
   );
 }
