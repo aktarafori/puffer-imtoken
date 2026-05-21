@@ -1,5 +1,4 @@
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { injected } from 'wagmi/connectors';
 
 export default function ConnectWallet() {
   const { address, isConnected } = useAccount();
@@ -7,11 +6,15 @@ export default function ConnectWallet() {
   const { disconnect } = useDisconnect();
 
   const handleConnect = () => {
-    const injectedConnector = connectors.find(c => c.name?.includes('Injected') || c.id === 'injected');
+    const injectedConnector = connectors.find(c => 
+      c.name?.toLowerCase().includes('injected') || 
+      c.id === 'injected'
+    );
+    
     if (injectedConnector) {
       connect({ connector: injectedConnector });
     } else {
-      alert('请在 imToken 或 MetaMask 中打开此页面');
+      alert('请在 imToken、MetaMask 或其他钱包浏览器中打开此 DApp');
     }
   };
 
