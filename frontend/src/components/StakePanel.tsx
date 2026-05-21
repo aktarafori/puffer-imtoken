@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAccount } from 'wagmi';
 
 export default function StakePanel() {
-  const { isConnected, address } = useAccount();
+  const { isConnected } = useAccount();
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
 
