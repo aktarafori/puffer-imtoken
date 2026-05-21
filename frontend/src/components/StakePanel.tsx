@@ -15,6 +15,7 @@ const tokens = [
 export default function StakePanel() {
   const { isConnected, address } = useAccount();
   const { data: walletClient } = useWalletClient();
+  
   const [selectedToken, setSelectedToken] = useState('ETH');
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,51 +23,47 @@ export default function StakePanel() {
   const [pufETHBalance, setPufETHBalance] = useState('0.0000');
   const [rate, setRate] = useState('1.0000');
 
-  // 获取 pufETH 余额
-  const fetchPufETHBalance = async () => {
-    if (!address) return;
-    try {
-      const publicClient = PufferClientHelpers.createPublicClient({
-        chain: Chain.Mainnet,
-        rpcUrls: ['https://eth.llamarpc.com'],
-      });
-      const pufferClient = new PufferClient(Chain.Mainnet, undefined, publicClient);
-      const bal = await pufferClient.vault.balanceOf(address);
-      setPufETHBalance((Number(bal) / 1e18).toFixed(4));
-    } catch (e) {
-      console.error('Balance fetch error:', e);
-    }
-  };
-
-  // 获取汇率
   const fetchRate = async () => {
     try {
       const publicClient = PufferClientHelpers.createPublicClient({
         chain: Chain.Mainnet,
         rpcUrls: ['https://eth.llamarpc.com'],
       });
-      const pufferClient = new PufferClient(Chain.Mainnet, undefined, publicClient);
-      const r = await pufferClient.vault.getPufETHRate();
+      const puffer = new PufferClient(Chain.Mainnet, undefined, publicClient);
+      const r = await puffer.vault.getPufETHRate();
       setRate((Number(r) / 1e18).toFixed(4));
     } catch (e) {
-      console.error('Rate fetch error:', e);
+      console.error(e);
+    }
+  };
+
+  const fetchBalance = async () => {
+    if (!address) return;
+    try {
+      const publicClient = PufferClientHelpers.createPublicClient({
+        chain: Chain.Mainnet,
+        rpcUrls: ['https://eth.llamarpc.com'],
+      });
+      const puffer = new PufferClient(Chain.Mainnet, undefined, publicClient);
+      const bal = await puffer.vault.balanceOf(address);
+      setPufETHBalance((Number(bal) / 1e18).toFixed(4));
+    } catch (e) {
+      console.error(e);
     }
   };
 
   useEffect(() => {
     fetchRate();
-    if (isConnected && address) {
-      fetchPufETHBalance();
-    }
+    if (isConnected && address) fetchBalance();
   }, [isConnected, address]);
 
   const handleStake = async () => {
     if (!isConnected || !walletClient || !address) {
-      alert('请先用 imToken 连接钱包');
+      alert('请用 imToken 连接钱包');
       return;
     }
-    if (!amount || parseFloat(amount) <= 0) {
-      alert('请输入质押数量');
+    if (!amount || Number(amount) <= 0) {
+      alert('请输入大于0的数量');
       return;
     }
 
@@ -77,31 +74,25 @@ export default function StakePanel() {
         rpcUrls: ['https://eth.llamarpc.com'],
       });
 
-      const pufferClient = new PufferClient(
-        Chain.Mainnet,
-        walletClient,
-        publicClient
-      );
+      const pufferClient = new PufferClient(Chain.Mainnet, walletClient, publicClient);
 
       let tx: string;
-
       if (selectedToken === 'ETH') {
         const { transact } = pufferClient.vault.depositETH(address);
-        tx = await transact(BigInt(Math.floor(parseFloat(amount) * 1e18)));
+        tx = await transact(BigInt(Math.floor(Number(amount) * 1e18)));
       } else {
-        // stETH / wstETH 暂时简化（SDK 主要稳定支持 ETH，stETH 可通过 approve + deposit）
-        alert(`当前版本暂优先支持 ETH 质押。\n\nstETH/wstETH 功能开发中...`);
+        alert('当前仅支持 ETH 直接质押\nstETH / wstETH 后续版本支持');
         setLoading(false);
         return;
       }
 
       setTxHash(tx);
-      alert(`✅ 交易已提交！\n\nTx Hash: ${tx}\n\n可在 Etherscan 查看`);
+      alert(`✅ 交易发送成功！\n\nTx: ${tx}`);
       setAmount('');
-      setTimeout(fetchPufETHBalance, 10000);
+      setTimeout(fetchBalance, 8000);
     } catch (error: any) {
       console.error(error);
-      alert('质押失败: ' + (error?.message || '未知错误，请确认主网并检查余额'));
+      alert('失败: ' + (error?.shortMessage || error?.message || '未知错误'));
     } finally {
       setLoading(false);
     }
@@ -109,70 +100,59 @@ export default function StakePanel() {
 
   return (
     <div className="card p-6 max-w-lg mx-auto">
-      <h2 className="text-2xl font-bold mb-2">Puffer 质押</h2>
-      <p className="text-gray-500 mb-6">ETH / stETH / wstETH → pufETH（真实主网）</p>
+      <h2 className="text-2xl font-bold mb-1">Puffer 质押</h2>
+      <p className="text-gray-500 mb-6">真实主网 · 支持 imToken</p>
 
-      {/* 余额 + 汇率 */}
-      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6">
-        <div className="flex justify-between items-center">
+      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 mb-6">
+        <div className="flex justify-between">
           <div>
-            <div className="text-sm text-gray-500">你的 pufETH 余额</div>
-            <div className="text-3xl font-bold text-[#007AFF]">{pufETHBalance} pufETH</div>
+            <div className="text-sm text-gray-500">pufETH 余额</div>
+            <div className="text-3xl font-bold text-[#007AFF]">{pufETHBalance}</div>
           </div>
           <div className="text-right">
-            <div className="text-sm text-gray-500">当前汇率</div>
-            <div className="font-medium">1 ETH ≈ {rate} pufETH</div>
+            <div className="text-sm text-gray-500">汇率</div>
+            <div>1 ETH ≈ {rate} pufETH</div>
           </div>
         </div>
       </div>
 
-      {/* Token 选择 */}
-      <div className="mb-4">
-        <label className="block text-sm text-gray-500 mb-2">选择质押资产</label>
+      <div className="mb-5">
+        <div className="text-sm text-gray-500 mb-2">选择资产</div>
         <div className="flex gap-2">
-          {tokens.map(token => (
+          {tokens.map(t => (
             <button
-              key={token.value}
-              onClick={() => setSelectedToken(token.value)}
-              className={`flex-1 py-3 rounded-2xl text-sm font-medium transition-all ${
-                selectedToken === token.value
-                  ? 'bg-[#007AFF] text-white shadow'
-                  : 'bg-gray-100 hover:bg-gray-200'
+              key={t.value}
+              onClick={() => setSelectedToken(t.value)}
+              className={`flex-1 py-3 rounded-2xl font-medium ${
+                selectedToken === t.value 
+                  ? 'bg-[#007AFF] text-white' 
+                  : 'bg-gray-100'
               }`}
             >
-              {token.label}
+              {t.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* 输入金额 */}
       <input
         type="number"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
         placeholder={`输入 ${selectedToken} 数量`}
-        className="w-full px-5 py-5 text-xl border border-gray-200 rounded-3xl focus:outline-none focus:border-[#007AFF] mb-6"
+        className="w-full px-5 py-5 text-xl border rounded-3xl focus:border-[#007AFF] mb-6"
         disabled={loading}
       />
 
       <button
         onClick={handleStake}
         disabled={loading || !amount || !isConnected}
-        className="w-full py-5 bg-[#007AFF] hover:bg-blue-600 text-white rounded-3xl text-xl font-medium disabled:opacity-50 transition-all"
+        className="w-full py-5 bg-[#007AFF] text-white rounded-3xl text-xl font-medium disabled:opacity-50"
       >
-        {loading ? '交易处理中...' : `一键质押 ${selectedToken} → pufETH`}
+        {loading ? '发送交易中...' : `质押 ${selectedToken} → pufETH`}
       </button>
 
-      {txHash && (
-        <p className="mt-4 text-center text-sm text-green-600 break-all">
-          ✅ Tx: {txHash}
-        </p>
-      )}
-
-      <p className="text-center text-xs text-gray-400 mt-6">
-        imToken 主网 • 小额测试 • 确认钱包在以太坊主网
-      </p>
+      {txHash && <p className="mt-4 text-center text-sm break-all text-green-600">Tx: {txHash}</p>}
     </div>
   );
 }
