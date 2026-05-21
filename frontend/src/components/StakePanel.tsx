@@ -1,3 +1,4 @@
+import tcx from '@imtoken/tcx-wasm';
 import { useState, useEffect } from 'react';
 import { useAccount, useWalletClient } from 'wagmi';
 import {
