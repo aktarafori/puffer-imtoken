@@ -1,3 +1,70 @@
+# Puffer 泡芙河豚 🐡
+
+**imToken 10th Anniversary Hackathon 项目**
+
+一个简洁好用的 Puffer Finance 质押小程序，支持 **imToken** 完美使用。
+
+[在线演示](https://puffer-imtoken-zla2.vercel.app/)
+
+---
+
+## ✨ 核心功能
+
+- **直接质押**：ETH 一键质押成 pufETH（真实主网交易）
+- **任意币兑换质押**：集成 Tokenlon 聚合器，支持任意代币 → pufETH
+- **UniFi Vault**：将 pufETH 存入 UniFi Vault，赚取更高收益
+- **实时信息**：显示 pufETH 余额、当前汇率
+- **完整兼容 imToken**：已集成 Token Core
+
+---
+
+## 🛠 技术栈
+
+- **前端**：React + TypeScript + Vite + Tailwind CSS
+- **钱包核心**：`@imtoken/tcx-wasm`（Token Core）
+- **Puffer 协议**：`@pufferfinance/puffer-sdk`
+- **区块链交互**：wagmi + viem
+- **部署**：Vercel
+
+---
+
+## 📱 使用说明
+
+1. 使用 **imToken** 浏览器打开项目
+2. 点击右上角连接钱包
+3. 切换不同 Tab 操作：
+   - **直接质押**：输入 ETH 数量直接质押
+   - **任意币兑换质押**：通过 Tokenlon 兑换任意代币后再质押
+   - **UniFi Vault**：把 pufETH 存入 UniFi 获取更高 APY
+
+---
+
+## 🚀 项目亮点
+
+- 完全真实主网交互（非测试网）
+- 严格按照 imToken Hackathon 要求集成 **Token Core**
+- 集成 Tokenlon 实现任意币一键兑换质押（进阶功能）
+- 界面简洁，移动端体验优秀
+
+---
+
+## 📁 项目结构
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Puffer x imToken Hackathon - Developer Resources
 
 Developer API and resources for the [imToken 10th Anniversary AI Co-Creation Campaign](https://10.token.im/#cocreation).
